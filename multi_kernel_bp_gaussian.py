@@ -28,7 +28,7 @@ args.seed=30
 args.test_batch_size=1000
 args.m=800
 args.layers=2
-args.lr=0.001
+args.lr=0.01
 args.momentum=0
 args.cuda=True
 args.epochs=100
@@ -59,30 +59,27 @@ counter_layer=0
 counter_m=0
 #fill x points
 for batch_idx, (data, target) in enumerate(train_loader):
-    for i in data:  # enumerate data points
+    for i in data: #enumerate data points
         x[counter_layer][counter_m].copy_(i.resize_(input_dim))
-        counter_m += 1
-        if counter_m == args.m:
-            counter_m = 0
-            counter_layer += 1
-            if counter_layer == args.layers:
+        counter_m+=1
+        if counter_m==args.m:
+            counter_m=0
+            counter_layer+=1
+            if counter_layer==args.layers:
                 break
-    if counter_layer == args.layers:
+    if counter_layer==args.layers:
         break
 if args.cuda:
-    x.cuda()
-x = Variable(x, requires_grad=False)
+    x=x.cuda()
+x=Variable(x,requires_grad=False)
 
 
 class Net(nn.Module):
     def __init__(self,deg):
         super(Net, self).__init__()
 
-        self.relu=True
         self.linear1=nn.Linear(args.m,args.m)
         self.linear2=nn.Linear(args.m,args.m)
-        self.bn1=nn.BatchNorm1d(args.m)
-        self.bn2=nn.BatchNorm1d(args.m)
         self.deg=deg
         # for layer in range(args.layers):
         #     curLinear=nn.Linear(args.m,args.m)
@@ -101,24 +98,13 @@ class Net(nn.Module):
 
         kernel1=self.getkernel(input.view(input.size(0),input_dim),x1)  #batch_size * m
 
-        if self.relu:
-            output1=F.relu(self.bn1(self.linear1(kernel1)))
-        else:
-            output1=self.bn1(self.linear1(kernel1)).alphatronrelu()
+        output1=F.relu(self.linear1(kernel1))  #batch_size*m
 
         x1_kernel1=self.getkernel(x2,x1) #m*m
-
-
-        if self.relu:
-            x1_output1=F.relu(self.bn1(self.linear1(x1_kernel1)))
-        else:
-            x1_output1=self.bn1(self.linear1(x1_kernel1)).alphatronrelu()
+        x1_output1=F.relu(self.linear1(x1_kernel1)) #m*m
 
         kernel2=torch.mm(output1,x1_output1.t()) # batch_size * m
-        if self.relu:
-            output2=F.relu(self.bn2(self.linear2(kernel2)))
-        else:
-            output2=self.bn2(self.linear2(kernel2)).alphatronrelu()
+        output2=F.relu(self.linear2(kernel2))  #batch_size*m
         return F.log_softmax(self.fc(output2)) #batch_size*10
 
 model=Net(1)

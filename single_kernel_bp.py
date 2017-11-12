@@ -26,11 +26,11 @@ args=aa()
 args.batch_size=64
 args.seed=30
 args.test_batch_size=1000
-args.m=300
+args.m=700
 args.lr=0.1
 args.momentum=0.95
 args.cuda=True
-args.epochs=30
+args.epochs=100
 args.log_interval=100
 
 
