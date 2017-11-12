@@ -66,8 +66,8 @@ class DenseBlock(nn.Module):
         return self.layer(x)
 
 class DenseNet3(nn.Module):
-    def __init__(self, depth, num_classes, growth_rate=12,
-                 reduction=0.5, bottleneck=True, dropRate=0.0):
+    def __init__(self, depth, num_classes,m, growth_rate=12,
+                 reduction=0.5, bottleneck=True, dropRate=0.0,deg=1):
         super(DenseNet3, self).__init__()
         in_planes = 2 * growth_rate
         n = (depth - 4) / 3
@@ -77,6 +77,7 @@ class DenseNet3(nn.Module):
         else:
             block = BasicBlock
         # 1st conv before any dense block
+        self.deg=deg
         self.conv1 = nn.Conv2d(3, in_planes, kernel_size=3, stride=1,
                                padding=1, bias=False)
         # 1st block
@@ -94,8 +95,9 @@ class DenseNet3(nn.Module):
         in_planes = int(in_planes+n*growth_rate)
         # global average pooling and classifier
         self.bn1 = nn.BatchNorm2d(in_planes)
+        self.bn_f = nn.BatchNorm1d(m)
         self.relu = nn.ReLU(inplace=True)
-        self.fc = nn.Linear(in_planes, num_classes)
+        self.fc = nn.Linear(m, num_classes)
         self.in_planes = in_planes
 
         for m in self.modules():
@@ -107,12 +109,27 @@ class DenseNet3(nn.Module):
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
                 m.bias.data.zero_()
-    def forward(self, x):
+    def getFeature(self,x):
         out = self.conv1(x)
         out = self.trans1(self.block1(out))
         out = self.trans2(self.block2(out))
         out = self.block3(out)
         out = self.relu(self.bn1(out))
         out = F.avg_pool2d(out, 8)
-        out = out.view(-1, self.in_planes)
-        return self.fc(out)
+        return out.view(-1,self.in_planes)
+
+    def getkernel(self, a, b):
+        inner = torch.mm(a, b.t()) / 1000
+        ans = inner + 0.001
+        for i in range(2, self.deg + 1):
+            ans = ans + inner ** i
+        return ans
+
+    def forward(self, x, anchor):  #anchor is a minibatch of m points
+        x_f=self.getFeature(x)
+
+        x_anchor=self.getFeature(anchor)
+
+        kernel1=self.getkernel(x_f,x_anchor)  #batch_size * m
+
+        return self.fc(self.bn_f(kernel1))
