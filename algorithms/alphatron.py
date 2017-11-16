@@ -12,7 +12,7 @@ class alphatron(nn.Module):
         self.kern=kern
         self.alpha=nn.Linear(self.m,1,bias=False)
         self.alpha.weight.data.uniform_()
-        self.alpha.weight.data*=10
+        # self.alpha.weight.data*=100
 
     def forward(self, x):  #anchor is a minibatch of m points
         kernel1=self.kern(x,self.anchor,self.d)  #batch_size * m

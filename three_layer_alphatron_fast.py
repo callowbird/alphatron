@@ -4,7 +4,7 @@ from algorithms.alphatron import alphatron  as alphatron_class
 from models.three_layer import three_layer
 from utils import getData, evaluate
 from models.double_layer import double_layer
-from kernels.MKd import MkdKern_fast
+from kernels.MKd import MkdKern_fast,Gaussian_fast
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 
@@ -19,7 +19,8 @@ test=getData(m,input_dim,sl)
 d=1
 T=1000
 
-model=alphatron_class(train["x"], d, MkdKern_fast)
+# model=alphatron_class(train["x"], d, MkdKern_fast)
+model=alphatron_class(train["x"], d, Gaussian_fast)
 # model=double_layer(input_dim,300)
 
 print('Number of model parameters: {}'.format(
