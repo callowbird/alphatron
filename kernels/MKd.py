@@ -5,3 +5,9 @@ def MkdKern(x1, x2, d):
     for deg in range(d+1):
         ans+= inn** deg
     return ans
+def MkdKern_fast(a, b,d):
+    inner = torch.mm(a, b.t()) / 1000
+    ans = inner + 0.001
+    for i in range(2, d+ 1):
+        ans = ans + inner ** i
+    return ans
