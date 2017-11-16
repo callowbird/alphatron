@@ -1,8 +1,8 @@
 Assume your python lib is at /usr/local/lib/python3.5/dist-packages/torch
 
 run the following commands to replace the two files in this folder:
-sudo cp variable.py /usr/local/lib/python3.5/dist-packages/torch/autorgrad/
-sudo cp tensor.py /usr/local/lib/python3.5/dist-packages/torch/autorgrad/_functions/
+sudo cp variable.py /usr/local/lib/python3.5/dist-packages/torch/autograd/
+sudo cp tensor.py /usr/local/lib/python3.5/dist-packages/torch/autograd/_functions/
 
 
 Notice that instead of revising the gradient of relu, what I did is introducing a new

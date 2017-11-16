@@ -20,8 +20,8 @@ d=1
 T=1000
 
 # model=alphatron_class(train["x"], d, MkdKern_fast)
-model=alphatron_class(train["x"], d, Gaussian_fast)
-# model=double_layer(input_dim,300)
+# model=alphatron_class(train["x"], d, Gaussian_fast)
+model=double_layer(input_dim,300)
 
 print('Number of model parameters: {}'.format(
     sum([p.data.nelement() for p in model.parameters()])))
