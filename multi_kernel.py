@@ -69,21 +69,23 @@ for batch_idx, (data, target) in enumerate(train_loader):
                 break
     if counter_layer == args.layers:
         break
-if args.cuda:
-    x.cuda()
 x = Variable(x, requires_grad=False)
+if args.cuda:
+    x=x.cuda()
 
 
 class Net(nn.Module):
     def __init__(self,deg):
         super(Net, self).__init__()
 
-        self.relu=True
+        self.relu=False
         self.linear1=nn.Linear(args.m,args.m)
         self.linear2=nn.Linear(args.m,args.m)
         self.bn1=nn.BatchNorm1d(args.m)
         self.bn2=nn.BatchNorm1d(args.m)
         self.deg=deg
+        self.drop1 = nn.Dropout(p=0.2)
+        self.drop2 = nn.Dropout(p=0.2)
         # for layer in range(args.layers):
         #     curLinear=nn.Linear(args.m,args.m)
         #     setattr(self,"linear"+str(layer),curLinear)
@@ -99,7 +101,7 @@ class Net(nn.Module):
     def forward(self, input,x1,x2):
         #resize into one dim input
 
-        kernel1=self.getkernel(input.view(input.size(0),input_dim),x1)  #batch_size * m
+        kernel1=self.drop1(self.getkernel(input.view(input.size(0),input_dim),x1))  #batch_size * m
 
         if self.relu:
             output1=F.relu(self.bn1(self.linear1(kernel1)))
@@ -108,13 +110,14 @@ class Net(nn.Module):
 
         x1_kernel1=self.getkernel(x2,x1) #m*m
 
-
         if self.relu:
             x1_output1=F.relu(self.bn1(self.linear1(x1_kernel1)))
         else:
             x1_output1=self.bn1(self.linear1(x1_kernel1)).alphatronrelu()
 
-        kernel2=torch.mm(output1,x1_output1.t()) # batch_size * m
+
+        kernel2=self.drop2(self.getkernel(output1,x1_output1.t())) # batch_size * m
+
         if self.relu:
             output2=F.relu(self.bn2(self.linear2(kernel2)))
         else:

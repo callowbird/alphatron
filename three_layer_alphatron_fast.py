@@ -11,17 +11,16 @@ import torch.nn as nn
 # torch.manual_seed(30)
 m=1000
 input_dim=300
-sl=three_layer(input_dim,input_dim)
+teacher_network=three_layer(input_dim, input_dim)
 
-train=getData(m,input_dim,sl)
-test=getData(m,input_dim,sl)
+train=getData(m, input_dim, teacher_network)
+test=getData(m, input_dim, teacher_network)
 
-d=1
-T=1000
+d=3
 
-# model=alphatron_class(train["x"], d, MkdKern_fast)
+model=alphatron_class(train["x"], d, MkdKern_fast)
 # model=alphatron_class(train["x"], d, Gaussian_fast)
-model=double_layer(input_dim,300)
+# model=double_layer(input_dim,300)
 
 print('Number of model parameters: {}'.format(
     sum([p.data.nelement() for p in model.parameters()])))
