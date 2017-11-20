@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from torch.autograd import Variable
 
-import densenet as dn
+import densenet_kernel as dn
 
 # used for logging to TensorBoard
 
@@ -29,7 +29,7 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
 parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     help='weight decay (default: 1e-4)')
-parser.add_argument('--print-freq', '-p', default=10, type=int,
+parser.add_argument('--print-freq', '-p', default=100, type=int,
                     help='print frequency (default: 10)')
 parser.add_argument('--layers', default=10, type=int,
                     help='total number of layers (default: 100)')
@@ -47,7 +47,7 @@ parser.add_argument('--resume', default='', type=str,
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--name', default='DenseNet_BC_100_12', type=str,
                     help='name of experiment')
-parser.add_argument('--m', default=256, type=int, help='number of anchor points')
+parser.add_argument('--m', default=64, type=int, help='number of anchor points')
 parser.set_defaults(bottleneck=False)
 parser.set_defaults(augment=True)
 
@@ -88,9 +88,9 @@ def main():
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     # create model
-    model = dn.DenseNet3(args.layers, 10,args.growth, reduction=args.reduce,
-                         bottleneck=args.bottleneck, dropRate=args.droprate)
-    
+    model = dn.DenseNet3(args.layers, 10,args.m, args.growth, reduction=args.reduce,
+                         bottleneck=args.bottleneck, dropRate=args.droprate,kernel_type='diff')
+
     # get the number of model parameters
     print('Number of model parameters: {}'.format(
         sum([p.data.nelement() for p in model.parameters()])))
@@ -117,19 +117,19 @@ def main():
 
     # define loss function (criterion) and pptimizer
     criterion = nn.CrossEntropyLoss().cuda()
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                nesterov=True,
-                                weight_decay=args.weight_decay)
+    optimizer = torch.optim.SGD([
+        {'params':model.parameters()},
+        {'params':[model.filters_1,model.filters_2,model.filters_3]}
+    ],args.lr, momentum=args.momentum, nesterov=True, weight_decay=args.weight_decay)
     anchor=torch.Tensor(args.m,3,32,32).fill_(0)
     counter_m=0
     for i, (input, target) in enumerate(train_loader):
-        for j in input:
-            anchor[counter_m].copy_(j)
-            counter_m += 1
-            if counter_m == args.m:
-                break
-        if counter_m == args.m:
+        len_input=input.size(0)
+        if counter_m+len_input>args.m:
+            len_input=args.m-counter_m
+        anchor[counter_m:counter_m+len_input].copy_(input)
+        counter_m+=len_input
+        if counter_m>=args.m:
             break
     anchor = Variable(anchor.cuda(), requires_grad=False)
 
@@ -137,10 +137,10 @@ def main():
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch)
+        train(train_loader, model, criterion, optimizer, epoch,anchor)
 
         # evaluate on validation set
-        prec1 = validate(val_loader, model, criterion, epoch)
+        prec1 = validate(val_loader, model, criterion, epoch,anchor)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
@@ -152,7 +152,7 @@ def main():
         }, is_best)
     print('Best accuracy: ', best_prec1)
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch,anchor):
     """Train for one epoch on the training set"""
     batch_time = AverageMeter()
     losses = AverageMeter()
@@ -169,7 +169,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input_var)
+        output = model(input_var,anchor)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
@@ -193,9 +193,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                       epoch, i, len(train_loader), batch_time=batch_time,
                       loss=losses, top1=top1))
+    print(["%.2f"%item for item in list(model.filters_1.data[0][:10].squeeze())])
     # log to TensorBoard
 
-def validate(val_loader, model, criterion, epoch):
+def validate(val_loader, model, criterion, epoch,anchor):
     """Perform validation on the validation set"""
     batch_time = AverageMeter()
     losses = AverageMeter()
@@ -212,7 +213,7 @@ def validate(val_loader, model, criterion, epoch):
         target_var = torch.autograd.Variable(target, volatile=True)
 
         # compute output
-        output = model(input_var)
+        output = model(input_var,anchor)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
