@@ -34,7 +34,7 @@ def poly_kernel(new_f,anchor_f,deg):
     #new_f:     B*Ch*R*C
     #anchor_f:  A*Ch*R*C
     #target:    B*A* R*C
-    target=new_f.new(new_f.size(0),anchor_f.size(0),new_f.size(2),new_f.size(3)).fill_(1)
+    target=torch.autograd.Variable(torch.Tensor(new_f.size(0),anchor_f.size(0),new_f.size(2),new_f.size(3)).fill_(1).cuda())
     new_f=new_f.unsqueeze(1)  #becomes B*1*Ch*R*C
     anchor_f=anchor_f.unsqueeze(0) #becomes 1*A*Ch*R*C
     new_f=new_f.expand(new_f.size(0),anchor_f.size(1),new_f.size(2),new_f.size(3),new_f.size(4))
