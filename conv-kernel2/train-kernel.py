@@ -37,6 +37,7 @@ parser.add_argument('--growth', default=12, type=int,
                     help='number of new channels per layer (default: 12)')
 parser.add_argument('--droprate', default=0, type=float,
                     help='dropout probability (default: 0.0)')
+parser.add_argument('--kernelPara', default=1, type=float)
 parser.add_argument('--no-augment', dest='augment', action='store_false',
                     help='whether to use standard augmentation (default: True)')
 parser.add_argument('--turnOff',dest='turnOn', action='store_false')
@@ -100,7 +101,7 @@ def main():
 
     # create model
     model = dn.DenseNet3(args.layers, 10,args.growth, reduction=args.reduce,
-                         dropRate=args.droprate,kernel=kernelPick,kernelSizeA=kernelSizeA,turnOn=turnOn)
+                         dropRate=args.droprate,kernelPara=args.kernelPara,kernel=kernelPick,kernelSizeA=kernelSizeA,turnOn=turnOn)
 
     # get the number of model parameters
     print('Number of model parameters: {}'.format(
