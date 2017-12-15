@@ -8,19 +8,18 @@ from kernels.MKd import MkdKern_fast,Gaussian_fast
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 
-torch.manual_seed(214)
-m=1000
+# torch.manual_seed(214)
+m=3000
 input_dim=28*28
 teacher_network=three_layer(input_dim, input_dim)
 
-train,test=mnistData(teacher_network)
-print(train['x'])
+train,test=mnistData(teacher_network,m)
 print(train['y'])
 
 d=3
 
-# model=alphatron_class(train["x"], d, MkdKern_fast)
-model=alphatron_class(train["x"], d, Gaussian_fast)
+model=alphatron_class(train["x"], d, MkdKern_fast)
+# model=alphatron_class(train["x"], d, Gaussian_fast)
 # model=double_layer(input_dim,30)
 
 print('Number of model parameters: {}'.format(

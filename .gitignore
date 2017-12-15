@@ -5,3 +5,4 @@ __pycache__/
 cifar10/runs/*
 conv-kernel/runs/*
 *.dat
+*.pth.tar
