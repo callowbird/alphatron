@@ -51,6 +51,12 @@ parser.set_defaults(guassian=False)
 parser.set_defaults(turnOn=True)
 
 best_prec1 = 0
+with open("/etc/hostname","r") as f:
+    a=f.readlines()
+if a[0].startswith("Dragon"):
+    datadir='/home/yang/data/data/'
+else:
+    datadir='/shared/data/'
 
 def main():
     global args, best_prec1
