@@ -70,8 +70,8 @@ class BottleneckBlock(nn.Module):
         self.state=False
 
     def set_vector(self, vec):
-        if hasattr(self, 'vec'):
-            print("Dif=",torch.norm(vec-self.vec))
+        # if hasattr(self, 'vec'):
+        #     print("Dif=",torch.norm(vec-self.vec))
         self.vec=vec.detach()   #vec has size A*Ch*R*C
     def set_state(self):
         self.state=True
