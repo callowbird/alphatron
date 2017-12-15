@@ -40,7 +40,7 @@ def poly_kernel(new_f,anchor_f,deg):
     new_f=new_f.expand(new_f.size(0),anchor_f.size(1),new_f.size(2),new_f.size(3),new_f.size(4))
     anchor_f=anchor_f.expand_as(new_f)
     inner=torch.sum(new_f*anchor_f,2)  #get B*A*R*C
-    for i in range(1,deg+1):
+    for i in range(1,int(deg)+1):
         target=target+inner**i  #target += inner^d
     return target
 
