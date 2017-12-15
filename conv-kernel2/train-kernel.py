@@ -92,6 +92,7 @@ def main():
     else:
         kernelPick='poly'
     print("Kernel",kernelPick)
+    print("kernel para",args.kernelPara)
 
     kwargs = {'num_workers': 1, 'pin_memory': True}
     train_loader = torch.utils.data.DataLoader(
