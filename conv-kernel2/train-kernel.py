@@ -85,6 +85,7 @@ def main():
 
     kernelSizeA=50
     turnOn=(args.turnOn==1)
+    print("datadir",datadir)
     print("turnOn:",turnOn)
     if args.gaussian:
         kernelPick='gaussian'
@@ -94,15 +95,15 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True}
     train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('/home/yang/data/data/', train=True, download=True,
+        datasets.CIFAR10(datadir, train=True, download=True,
                          transform=transform_train),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     anchor_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('/home/yang/data/data/', train=True, download=True,
+        datasets.CIFAR10(datadir, train=True, download=True,
                          transform=transform_train),
         batch_size=kernelSizeA, shuffle=True, **kwargs)
     val_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('/home/yang/data/data/', train=False, transform=transform_test),
+        datasets.CIFAR10(datadir, train=False, transform=transform_test),
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     # create model
